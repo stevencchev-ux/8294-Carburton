@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>8294 E Carburton — Project Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg:      #0d0f14;
+    --surface: #13161e;
+    --surf2:   #1a1e28;
+    --border:  rgba(255,255,255,0.07);
+    --text:    #e4e6f0;
+    --muted:   #626880;
+    --green:   #c8f04a;
+    --teal:    #4af0b8;
+    --warn:    #f0c44a;
+    --red:     #f05a4a;
+    --blue:    #5b9cf6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .hdr {
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  }
+  .hdr-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
+  .hdr-meta  { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .badge {
+    flex-shrink: 0;
+    font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500;
+    padding: 5px 12px; border-radius: 100px; letter-spacing: 0.05em; white-space: nowrap;
+  }
+  .badge.not-started { background: rgba(255,255,255,0.05); color: var(--muted);  border: 1px solid var(--border); }
+  .badge.ahead       { background: rgba(74,240,184,0.1);   color: var(--teal);  border: 1px solid rgba(74,240,184,0.25); }
+  .badge.on-track    { background: rgba(200,240,74,0.1);   color: var(--green); border: 1px solid rgba(200,240,74,0.25); }
+  .badge.at-risk     { background: rgba(240,196,74,0.1);   color: var(--warn);  border: 1px solid rgba(240,196,74,0.25); }
+  .badge.behind      { background: rgba(240,90,74,0.1);    color: var(--red);   border: 1px solid rgba(240,90,74,0.25); }
+
+  /* ── PAGE WRAPPER ── */
+  .page { padding: 20px 16px 60px; max-width: 900px; margin: 0 auto; }
+
+  /* ── SECTION LABEL ── */
+  .sec {
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em;
+    color: var(--muted); text-transform: uppercase; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sec::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  /* ── CARD ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 12px; }
+
+  /* ── KPI GRID — 2 col on mobile, 4 col on desktop ── */
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+  .kpi-lbl  { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+  .kpi-val  { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+  .kpi-val.green  { color: var(--green); }
+  .kpi-val.blue   { color: var(--blue); }
+  .kpi-val.yellow { color: var(--warn); }
+  .kpi-val.teal   { color: var(--teal); }
+  .kpi-sub  { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  /* ── PROGRESS BAR ── */
+  .prog-track { height: 5px; background: var(--surf2); border-radius: 100px; overflow: hidden; margin-top: 12px; }
+  .prog-fill  { height: 100%; border-radius: 100px; transition: width .6s ease; }
+
+  /* ── WEEK STRIP — scrollable on mobile ── */
+  .week-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
+  .week-scroll::-webkit-scrollbar { height: 3px; }
+  .week-scroll::-webkit-scrollbar-track { background: transparent; }
+  .week-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+  .week-strip {
+    display: flex; gap: 6px;
+    min-width: max-content;
+  }
+  .wk {
+    flex-shrink: 0;
+    width: 72px; text-align: center; padding: 10px 6px;
+    border-radius: 8px; font-family: 'DM Mono', monospace;
+  }
+  .wk-num  { font-size: 13px; font-weight: 500; }
+  .wk-date { font-size: 9px; margin-top: 3px; opacity: 0.55; }
+  .wk.done    { background: rgba(200,240,74,0.12); color: var(--green); border: 1px solid rgba(200,240,74,0.2); }
+  .wk.current { background: rgba(240,196,74,0.12); color: var(--warn);  border: 1px solid rgba(240,196,74,0.3); }
+  .wk.future  { background: var(--surf2);          color: var(--muted); border: 1px solid var(--border); }
+
+  /* ── LEGEND ── */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .legend-dot  { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── CHARTS ── */
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* ── DONUT LAYOUT ── */
+  .donut-row { display: flex; flex-direction: column; align-items: center; }
+  .donut-wrap { position: relative; width: 160px; height: 160px; }
+  .donut-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .donut-num  { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); }
+  .donut-lbl  { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); margin-top: 2px; }
+
+  /* ── MILESTONES ── */
+  .ms-item {
+    display: grid;
+    grid-template-columns: 58px 16px 1fr auto;
+    gap: 10px; align-items: center;
+    padding: 11px 0; border-bottom: 1px solid var(--border);
+  }
+  .ms-item:last-child { border-bottom: none; }
+  .ms-day  { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-align: right; line-height: 1.4; }
+  .ms-dot  { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); background: var(--surf2); flex-shrink: 0; }
+  .ms-dot.done    { background: var(--green); border-color: var(--green); }
+  .ms-dot.active  { background: var(--warn);  border-color: var(--warn);  box-shadow: 0 0 0 3px rgba(240,196,74,0.2); }
+  .ms-dot.overdue { background: var(--red);   border-color: var(--red); }
+  .ms-name { font-size: 13px; color: var(--text); line-height: 1.4; }
+  .ms-name.done    { color: var(--muted); text-decoration: line-through; }
+  .ms-name.overdue { color: var(--red); }
+  .ms-name.active  { color: var(--warn); font-weight: 500; }
+  .ms-pill {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    padding: 3px 8px; border-radius: 100px; white-space: nowrap; letter-spacing: 0.03em;
+  }
+  .ms-pill.done    { background: rgba(200,240,74,0.1);  color: var(--green); }
+  .ms-pill.active  { background: rgba(240,196,74,0.1);  color: var(--warn); }
+  .ms-pill.overdue { background: rgba(240,90,74,0.1);   color: var(--red); }
+  .ms-pill.future  { background: rgba(255,255,255,0.04); color: var(--muted); }
+
+  /* ── DESKTOP OVERRIDES ── */
+  @media (min-width: 640px) {
+    .hdr        { padding: 28px 32px 24px; }
+    .hdr-title  { font-size: 20px; }
+    .page       { padding: 28px 32px 60px; }
+    .kpi-grid   { grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .kpi-val    { font-size: 30px; }
+    .card       { padding: 22px 24px; margin-bottom: 16px; }
+    .week-scroll { overflow-x: visible; }
+    .week-strip  { display: grid; grid-template-columns: repeat(10, 1fr); min-width: unset; }
+    .wk         { width: auto; }
+    .donut-row  { flex-direction: row; gap: 32px; align-items: center; }
+    .ms-item    { grid-template-columns: 68px 16px 1fr auto; gap: 14px; }
+  }
+  @media (min-width: 900px) {
+    .spend-row { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; margin-bottom: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<script>
+/* ================================================================
+   ✏️  EDIT YOUR DATA HERE — DO NOT EDIT ANYTHING BELOW THIS BLOCK
+   ================================================================ */
+
+const LAST_UPDATED = "April 4, 2026";
+
+/* Project dates */
+const START_DATE  = "2026-04-22";
+const TOTAL_WEEKS = 10;
+
+/* LABOR — enter that week's Gusto total. Future weeks stay 0. */
+const LABOR_BY_WEEK = [
+  2300,   /* Week 1  Apr 22–28 */
+  0,   /* Week 2  Apr 29–May 5 */
+  0,   /* Week 3  May 6–12 */
+  0,   /* Week 4  May 13–19 */
+  0,   /* Week 5  May 20–26 */
+  0,   /* Week 6  May 27–Jun 2 */
+  0,   /* Week 7  Jun 3–9 */
+  0,   /* Week 8  Jun 10–16 */
+  0,   /* Week 9  Jun 17–23 */
+  0,   /* Week 10 Jun 24–30 */
+];
+
+/* MATERIALS — running cumulative totals by category */
+const MATERIALS = {
+  "Demo & Disposal":  1500,
+  "Structural":       0,
+  "Kitchen":          3400,
+  "Bathrooms":        0,
+  "Lighting":         500,
+  "Exterior & Paint": 0,
+  "Flooring":         0,
+  "Misc":             0,
+};
+
+/* Total renovation budget */
+const RENO_BUDGET = 110000;
+
+/* MILESTONES — flip done: false → done: true as each is finished */
+const MILESTONES = [
+  { name: "Demo complete — walls, cabinets, fixtures cleared",  targetDay: 3,  done: false },
+  { name: "Load-bearing wall removal & structural header set",  targetDay: 5,  done: false },
+  { name: "Rough electrical — panel upgrade, recessed layout",  targetDay: 8,  done: false },
+  { name: "Rough plumbing — both baths roughed in",             targetDay: 10, done: false },
+  { name: "Drywall hang & tape complete",                       targetDay: 14, done: false },
+  { name: "Drywall texture & prime",                            targetDay: 16, done: false },
+  { name: "Kitchen cabinets installed",                         targetDay: 22, done: false },
+  { name: "Bathroom tile — floors & showers",                   targetDay: 24, done: false },
+  { name: "Countertops templated & ordered",                    targetDay: 25, done: false },
+  { name: "Exterior paint complete",                            targetDay: 28, done: false },
+  { name: "Recessed lighting trim & fixtures installed",        targetDay: 30, done: false },
+  { name: "Dining cabinets & wall cabinets installed",          targetDay: 32, done: false },
+  { name: "Countertops installed",                              targetDay: 35, done: false },
+  { name: "Backsplash & pendant lights installed",              targetDay: 37, done: false },
+  { name: "Bath vanities, mirrors & fixtures installed",        targetDay: 40, done: false },
+  { name: "Interior paint — final coat all rooms",              targetDay: 42, done: false },
+  { name: "Flooring complete",                                  targetDay: 45, done: false },
+  { name: "Appliances installed",                               targetDay: 48, done: false },
+  { name: "Punch list & final clean",                           targetDay: 65, done: false },
+  { name: "Professional photos",                                targetDay: 67, done: false },
+  { name: "Listed on MLS",                                      targetDay: 70, done: false },
+];
+
+/* ================================================================
+   END OF EDITABLE DATA — DO NOT EDIT BELOW THIS LINE
+   ================================================================ */
+</script>
+
+<script>
+const g = id => document.getElementById(id);
+const fmt = n => '$' + Math.round(n).toLocaleString();
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/* ── Date calculations ── */
+const START = new Date(START_DATE + 'T00:00:00');
+const END   = new Date(START); END.setDate(END.getDate() + TOTAL_WEEKS * 7);
+const TODAY = new Date();
+TODAY.setHours(0,0,0,0);
+
+/* Days since start — 0 if not started yet, positive once started */
+const elapsed  = Math.max(0, Math.floor((TODAY - START) / 86400000));
+const totalD   = Math.floor((END - START) / 86400000);
+const remain   = Math.max(0, totalD - elapsed);
+const timePct  = Math.min(100, Math.round((elapsed / totalD) * 100));
+
+/* Current week: 1 before start, increments each 7 days */
+const curWeek  = elapsed === 0 ? 1 : Math.min(TOTAL_WEEKS, Math.floor(elapsed / 7) + 1);
+const notStarted = TODAY < START;
+
+/* ── Spend totals ── */
+const laborTotal = LABOR_BY_WEEK.reduce((a,b)=>a+b, 0);
+const matTotal   = Object.values(MATERIALS).reduce((a,b)=>a+b, 0);
+const grandTotal = laborTotal + matTotal;
+
+/* ── Milestones ── */
+const msDone    = MILESTONES.filter(m => m.done).length;
+const msOverdue = MILESTONES.filter(m => !m.done && elapsed >= m.targetDay).length;
+
+function msStatus(ms) {
+  if (ms.done)                     return 'done';
+  if (elapsed >= ms.targetDay)     return 'overdue';
+  if (elapsed >= ms.targetDay - 3) return 'active';
+  return 'future';
+}
+
+function health() {
+  if (notStarted)                        return { label: 'Not Started',      cls: 'not-started' };
+  if (msOverdue === 0 && msDone > 0)     return { label: 'Ahead of Schedule',cls: 'ahead' };
+  if (msOverdue === 0)                   return { label: 'On Schedule',       cls: 'on-track' };
+  if (msOverdue <= 2)                    return { label: 'At Risk',           cls: 'at-risk' };
+  return                                        { label: 'Behind Schedule',   cls: 'behind' };
+}
+
+function dayDate(d) {
+  const dt = new Date(START); dt.setDate(dt.getDate() + d - 1);
+  return MONTHS[dt.getMonth()] + ' ' + dt.getDate();
+}
+
+function weekStartLabel(w) {
+  const s = new Date(START); s.setDate(s.getDate() + (w-1)*7);
+  return MONTHS[s.getMonth()] + ' ' + s.getDate();
+}
+
+/* ── Render ── */
+window.addEventListener('DOMContentLoaded', () => {
+
+  /* Header */
+  const h = health();
+  g('badge').textContent  = h.label;
+  g('badge').className    = 'badge ' + h.cls;
+  g('updated').textContent = 'Updated ' + LAST_UPDATED;
+
+  /* KPIs */
+  g('kpi-labor').textContent   = fmt(laborTotal);
+  g('kpi-mat').textContent     = fmt(matTotal);
+  g('kpi-elapsed').textContent = notStarted ? 'Starts Apr 22' : elapsed + (elapsed===1?' day':' days');
+  g('kpi-remain').textContent  = remain + ' days';
+  g('kpi-labor-sub').textContent   = notStarted ? 'Project not started' : 'Wk ' + curWeek + ' of ' + TOTAL_WEEKS + ' · Gusto';
+  g('kpi-mat-sub').textContent     = notStarted ? 'Project not started' : fmt(matTotal) + ' across 8 areas';
+  g('kpi-elapsed-sub').textContent = notStarted ? 'Starting Apr 22, 2026' : timePct + '% of timeline used';
+  g('kpi-remain-sub').textContent  = 'Target list: Jun 30, 2026';
+
+  g('time-bar').style.width      = timePct + '%';
+  g('time-bar').style.background = timePct > 80 ? '#f05a4a' : timePct > 55 ? '#f0c44a' : '#5b9cf6';
+
+  /* Week strip */
+  let ws = '';
+  for (let w = 1; w <= TOTAL_WEEKS; w++) {
+    const st = notStarted
+      ? (w === 1 ? 'current' : 'future')
+      : (w < curWeek ? 'done' : w === curWeek ? 'current' : 'future');
+    ws += `<div class="wk ${st}">
+      <div class="wk-num">W${w}</div>
+      <div class="wk-date">${weekStartLabel(w)}</div>
+    </div>`;
+  }
+  g('week-strip').innerHTML = ws;
+
+  /* Donut */
+  const hasSpend = grandTotal > 0;
+  new Chart(g('donutChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Labor','Materials','Remaining'],
+      datasets: [{
+        data: hasSpend
+          ? [laborTotal, matTotal, Math.max(0, RENO_BUDGET - grandTotal)]
+          : [0, 0, 1],
+        backgroundColor: hasSpend
+          ? ['#c8f04a','#5b9cf6','rgba(255,255,255,0.07)']
+          : ['rgba(255,255,255,0.04)','rgba(255,255,255,0.03)','rgba(255,255,255,0.07)'],
+        borderColor: '#0d0f14',
+        borderWidth: 3,
+        hoverOffset: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '72%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + fmt(ctx.raw) } }
+      }
+    }
+  });
+  g('donut-num').textContent = fmt(grandTotal);
+
+  /* Labor bar */
+  new Chart(g('laborChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: LABOR_BY_WEEK.map((_,i) => 'W'+(i+1)),
+      datasets: [{
+        data: LABOR_BY_WEEK,
+        backgroundColor: LABOR_BY_WEEK.map((_,i) =>
+          i+1 < curWeek    ? 'rgba(200,240,74,0.65)' :
+          i+1 === curWeek  ? 'rgba(240,196,74,0.65)' :
+          'rgba(255,255,255,0.05)'
+        ),
+        borderColor: LABOR_BY_WEEK.map((_,i) =>
+          i+1 < curWeek    ? '#c8f04a' :
+          i+1 === curWeek  ? '#f0c44a' :
+          'rgba(255,255,255,0.1)'
+        ),
+        borderWidth: 1, borderRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ color:'#626880', font:{ family:'DM Mono', size:10 } } },
+        y: { grid:{ color:'rgba(255,255,255,0.04)' }, beginAtZero:true,
+             ticks:{ color:'#626880', font:{ family:'DM Mono', size:10 }, callback: v => v===0?'$0':'$'+v/1000+'K' } }
+      }
+    }
+  });
+
+  /* Materials bar */
+  const matColors = ['#f05a4a','#f0c44a','#c8f04a','#4af0b8','#5b9cf6','#f04ab8','#9b6af0','#626880'];
+  new Chart(g('matChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(MATERIALS),
+      datasets: [{
+        data: Object.values(MATERIALS),
+        backgroundColor: matColors.map(c => c+'99'),
+        borderColor: matColors,
+        borderWidth: 1, borderRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid:{ color:'rgba(255,255,255,0.04)' }, beginAtZero:true,
+             ticks:{ color:'#626880', font:{ family:'DM Mono', size:10 }, callback: v => v===0?'$0':'$'+v/1000+'K' } },
+        y: { grid:{ display:false }, ticks:{ color:'#e4e6f0', font:{ family:'DM Mono', size:11 } } }
+      }
+    }
+  });
+
+  /* Milestones */
+  const msPct = Math.round((msDone / MILESTONES.length) * 100);
+  g('ms-bar').style.width    = msPct + '%';
+  g('ms-summary').textContent = msDone + ' of ' + MILESTONES.length + ' complete' +
+    (msOverdue > 0 ? '  ·  ' + msOverdue + ' overdue' : '');
+
+  const pillLabel = { done:'Complete', active:'Due Soon', overdue:'Overdue', future:'Upcoming' };
+  g('ms-list').innerHTML = MILESTONES.map(ms => {
+    const st = msStatus(ms);
+    return `<div class="ms-item">
+      <div class="ms-day">Day&nbsp;${ms.targetDay}<br>${dayDate(ms.targetDay)}</div>
+      <div class="ms-dot ${st}"></div>
+      <div class="ms-name ${st}">${ms.name}</div>
+      <div class="ms-pill ${st}">${pillLabel[st]}</div>
+    </div>`;
+  }).join('');
+
+});
+</script>
+
+<!-- ── PAGE ── -->
+<div class="hdr">
+  <div>
+    <div class="hdr-title">8294 E Carburton St · Long Beach</div>
+    <div class="hdr-meta">10-WEEK FLIP · START APR 22, 2026 · <span id="updated"></span></div>
+  </div>
+  <div id="badge" class="badge not-started">Not Started</div>
+</div>
+
+<div class="page">
+
+  <!-- KPIs -->
+  <div class="sec">Project to Date</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-lbl">Labor PTD</div>
+      <div class="kpi-val green" id="kpi-labor">$0</div>
+      <div class="kpi-sub" id="kpi-labor-sub"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">Materials PTD</div>
+      <div class="kpi-val blue" id="kpi-mat">$0</div>
+      <div class="kpi-sub" id="kpi-mat-sub"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">Days Elapsed</div>
+      <div class="kpi-val yellow" id="kpi-elapsed">—</div>
+      <div class="kpi-sub" id="kpi-elapsed-sub"></div>
+      <div class="prog-track"><div class="prog-fill" id="time-bar" style="width:0%"></div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">Days Remaining</div>
+      <div class="kpi-val teal" id="kpi-remain">—</div>
+      <div class="kpi-sub" id="kpi-remain-sub"></div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="sec">Project Timeline</div>
+  <div class="card">
+    <div class="week-scroll">
+      <div id="week-strip" class="week-strip"></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(200,240,74,0.5)"></div>Completed</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(240,196,74,0.5)"></div>Current</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1)"></div>Upcoming</div>
+    </div>
+  </div>
+
+  <!-- LABOR + DONUT — stacked on mobile, side by side on desktop -->
+  <div class="sec">Spend Breakdown</div>
+  <div class="spend-row">
+    <div class="card">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Weekly Labor Cost</div>
+      <div class="chart-wrap" style="height:180px"><canvas id="laborChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Total Spend vs Budget</div>
+      <div class="donut-row">
+        <div class="donut-wrap">
+          <canvas id="donutChart"></canvas>
+          <div class="donut-center">
+            <div class="donut-num" id="donut-num">$0</div>
+            <div class="donut-lbl">SPENT PTD</div>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#c8f04a"></div>Labor</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#5b9cf6"></div>Materials</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)"></div>Remaining</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MATERIALS -->
+  <div class="sec">Materials by Category</div>
+  <div class="card">
+    <div class="chart-wrap" style="height:250px"><canvas id="matChart"></canvas></div>
+  </div>
+
+  <!-- MILESTONES -->
+  <div class="sec">Milestones</div>
+  <div class="card">
+    <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:10px" id="ms-summary"></div>
+    <div class="prog-track" style="margin-bottom:20px">
+      <div class="prog-fill" id="ms-bar" style="width:0%;background:var(--green)"></div>
+    </div>
+    <div id="ms-list"></div>
+  </div>
+
+</div>
+</body>
+</html>
