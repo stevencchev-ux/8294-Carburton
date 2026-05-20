@@ -232,6 +232,128 @@
 </head>
 <body>
 
+<!-- ── PAGE ── -->
+<div class="hdr">
+  <div>
+    <div class="hdr-title">8294 E Carburton St · Long Beach</div>
+    <div class="hdr-meta">10-WEEK FLIP · START APR 24, 2026 · <span id="updated"></span></div>
+  </div>
+  <div id="badge" class="badge not-started">Not Started</div>
+</div>
+
+<div class="page">
+
+  <!-- DEAL SUMMARY -->
+  <div class="sec">Deal Summary</div>
+  <div class="deal-banner">
+    <div class="deal-left">
+      <div class="deal-item">
+        <div class="deal-lbl">Purchase Price</div>
+        <div class="deal-val" id="deal-purchase">—</div>
+      </div>
+      <div class="deal-item">
+        <div class="deal-lbl">Reno Spent PTD</div>
+        <div class="deal-val" id="deal-reno">—</div>
+      </div>
+      <div class="deal-item">
+        <div class="deal-lbl">Total Invested</div>
+        <div class="deal-val" id="deal-invested">—</div>
+      </div>
+      <div class="deal-item">
+        <div class="deal-lbl">Target Sale Price</div>
+        <div class="deal-val" id="deal-target">—</div>
+      </div>
+    </div>
+    <div class="deal-divider"></div>
+    <div class="deal-right">
+      <div class="deal-spread-lbl">Projected Profit</div>
+      <div class="deal-spread-val" id="deal-spread">—</div>
+    </div>
+  </div>
+
+  <!-- PTD KPIs — 3 compact cards always in one row -->
+  <div class="sec">Project to Date</div>
+  <div class="kpi-grid-ptd">
+    <div class="kpi-card">
+      <div class="kpi-lbl">Labor PTD</div>
+      <div class="kpi-val green" id="kpi-labor">$0</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">Materials PTD</div>
+      <div class="kpi-val blue" id="kpi-mat">$0</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">Misc PTD</div>
+      <div class="kpi-val orange" id="kpi-misc">$0</div>
+    </div>
+  </div>
+
+  <!-- TIME KPIs -->
+  <div class="kpi-grid-time">
+    <div class="kpi-card-time">
+      <div class="kpi-lbl">Days Elapsed</div>
+      <div class="kpi-val yellow" id="kpi-elapsed">—</div>
+      <div class="kpi-sub" id="kpi-elapsed-sub"></div>
+      <div class="prog-track"><div class="prog-fill" id="time-bar" style="width:0%"></div></div>
+    </div>
+    <div class="kpi-card-time">
+      <div class="kpi-lbl">Days Remaining</div>
+      <div class="kpi-val teal" id="kpi-remain">—</div>
+      <div class="kpi-sub" id="kpi-remain-sub"></div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="sec">Project Timeline</div>
+  <div class="card">
+    <div class="week-scroll">
+      <div id="week-strip" class="week-strip"></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(200,240,74,0.5)"></div>Completed</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(240,196,74,0.5)"></div>Current</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1)"></div>Upcoming</div>
+    </div>
+  </div>
+
+  <!-- SPEND -->
+  <div class="sec">Spend Breakdown</div>
+  <div class="spend-row">
+    <div class="card">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Weekly Labor Cost</div>
+      <div class="chart-wrap" style="height:180px"><canvas id="laborChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Reno Spend vs Budget</div>
+      <div class="donut-row">
+        <div class="donut-wrap">
+          <canvas id="donutChart"></canvas>
+          <div class="donut-center">
+            <div class="donut-num" id="donut-num">$0</div>
+            <div class="donut-lbl">RENO PTD</div>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#c8f04a"></div>Labor</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#5b9cf6"></div>Materials</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#f0844a"></div>Misc</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)"></div>Remaining</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MILESTONES -->
+  <div class="sec">Milestones</div>
+  <div class="card">
+    <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:10px" id="ms-summary"></div>
+    <div class="prog-track" style="margin-bottom:20px">
+      <div class="prog-fill" id="ms-bar" style="width:0%;background:var(--green)"></div>
+    </div>
+    <div id="ms-list"></div>
+  </div>
+
+</div>
 <script>
 /* ================================================================
    EDITABLE DATA
@@ -448,128 +570,5 @@ window.addEventListener('DOMContentLoaded', () => {
 
 });
 </script>
-
-<!-- ── PAGE ── -->
-<div class="hdr">
-  <div>
-    <div class="hdr-title">8294 E Carburton St · Long Beach</div>
-    <div class="hdr-meta">10-WEEK FLIP · START APR 24, 2026 · <span id="updated"></span></div>
-  </div>
-  <div id="badge" class="badge not-started">Not Started</div>
-</div>
-
-<div class="page">
-
-  <!-- DEAL SUMMARY -->
-  <div class="sec">Deal Summary</div>
-  <div class="deal-banner">
-    <div class="deal-left">
-      <div class="deal-item">
-        <div class="deal-lbl">Purchase Price</div>
-        <div class="deal-val" id="deal-purchase">—</div>
-      </div>
-      <div class="deal-item">
-        <div class="deal-lbl">Reno Spent PTD</div>
-        <div class="deal-val" id="deal-reno">—</div>
-      </div>
-      <div class="deal-item">
-        <div class="deal-lbl">Total Invested</div>
-        <div class="deal-val" id="deal-invested">—</div>
-      </div>
-      <div class="deal-item">
-        <div class="deal-lbl">Target Sale Price</div>
-        <div class="deal-val" id="deal-target">—</div>
-      </div>
-    </div>
-    <div class="deal-divider"></div>
-    <div class="deal-right">
-      <div class="deal-spread-lbl">Projected Profit</div>
-      <div class="deal-spread-val" id="deal-spread">—</div>
-    </div>
-  </div>
-
-  <!-- PTD KPIs — 3 compact cards always in one row -->
-  <div class="sec">Project to Date</div>
-  <div class="kpi-grid-ptd">
-    <div class="kpi-card">
-      <div class="kpi-lbl">Labor PTD</div>
-      <div class="kpi-val green" id="kpi-labor">$0</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-lbl">Materials PTD</div>
-      <div class="kpi-val blue" id="kpi-mat">$0</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-lbl">Misc PTD</div>
-      <div class="kpi-val orange" id="kpi-misc">$0</div>
-    </div>
-  </div>
-
-  <!-- TIME KPIs -->
-  <div class="kpi-grid-time">
-    <div class="kpi-card-time">
-      <div class="kpi-lbl">Days Elapsed</div>
-      <div class="kpi-val yellow" id="kpi-elapsed">—</div>
-      <div class="kpi-sub" id="kpi-elapsed-sub"></div>
-      <div class="prog-track"><div class="prog-fill" id="time-bar" style="width:0%"></div></div>
-    </div>
-    <div class="kpi-card-time">
-      <div class="kpi-lbl">Days Remaining</div>
-      <div class="kpi-val teal" id="kpi-remain">—</div>
-      <div class="kpi-sub" id="kpi-remain-sub"></div>
-    </div>
-  </div>
-
-  <!-- TIMELINE -->
-  <div class="sec">Project Timeline</div>
-  <div class="card">
-    <div class="week-scroll">
-      <div id="week-strip" class="week-strip"></div>
-    </div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:rgba(200,240,74,0.5)"></div>Completed</div>
-      <div class="legend-item"><div class="legend-dot" style="background:rgba(240,196,74,0.5)"></div>Current</div>
-      <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1)"></div>Upcoming</div>
-    </div>
-  </div>
-
-  <!-- SPEND -->
-  <div class="sec">Spend Breakdown</div>
-  <div class="spend-row">
-    <div class="card">
-      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Weekly Labor Cost</div>
-      <div class="chart-wrap" style="height:180px"><canvas id="laborChart"></canvas></div>
-    </div>
-    <div class="card">
-      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Reno Spend vs Budget</div>
-      <div class="donut-row">
-        <div class="donut-wrap">
-          <canvas id="donutChart"></canvas>
-          <div class="donut-center">
-            <div class="donut-num" id="donut-num">$0</div>
-            <div class="donut-lbl">RENO PTD</div>
-          </div>
-        </div>
-        <div class="legend">
-          <div class="legend-item"><div class="legend-dot" style="background:#c8f04a"></div>Labor</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#5b9cf6"></div>Materials</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#f0844a"></div>Misc</div>
-          <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)"></div>Remaining</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MILESTONES -->
-  <div class="sec">Milestones</div>
-  <div class="card">
-    <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:10px" id="ms-summary"></div>
-    <div class="prog-track" style="margin-bottom:20px">
-      <div class="prog-fill" id="ms-bar" style="width:0%;background:var(--green)"></div>
-    </div>
-    <div id="ms-list"></div>
-  </div>
-
-</div>
 </body>
 </html>
